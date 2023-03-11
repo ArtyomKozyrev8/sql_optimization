@@ -21,9 +21,9 @@ class InitTables:
     @staticmethod
     def _create_table_contact() -> str:
         return """
-            CREATE TABLE IF NOT EXISTS contact(
+            CREATE TABLE IF NOT EXISTS client_contact(
                 id SERIAL PRIMARY KEY,
-                client_id uuid,
+                client_id uuid UNIQUE,
                 phone VARCHAR(20) DEFAULT NULL,
                 email VARCHAR(40) DEFAULT NULL,
                 deleted BOOLEAN DEFAULT FALSE,
@@ -38,9 +38,9 @@ class InitTables:
     @staticmethod
     def _create_table_address() -> str:
         return """
-            CREATE TABLE IF NOT EXISTS address(
+            CREATE TABLE IF NOT EXISTS client_address(
                 id SERIAL PRIMARY KEY,
-                client_id uuid,
+                client_id uuid UNIQUE,
                 address VARCHAR(50) DEFAULT NULL,
                 deleted BOOLEAN DEFAULT FALSE,
                 created_time TIMESTAMP DEFAULT NOW(),
@@ -54,11 +54,11 @@ class InitTables:
     @staticmethod
     def _create_table_passport() -> str:
         return """
-            CREATE TABLE IF NOT EXISTS passport(
+            CREATE TABLE IF NOT EXISTS client_passport(
                 id SERIAL PRIMARY KEY,
-                client_id uuid,
+                client_id uuid UNIQUE,
                 seria VARCHAR(4),
-                number VARCHAR(4),
+                number VARCHAR(6),
                 deleted BOOLEAN DEFAULT FALSE,
                 created_time TIMESTAMP DEFAULT NOW(),
             CONSTRAINT fk_client_id_clients_tb
@@ -71,7 +71,7 @@ class InitTables:
     @staticmethod
     def _create_table_wallet() -> str:
         return """
-            CREATE TABLE IF NOT EXISTS wallet(
+            CREATE TABLE IF NOT EXISTS client_wallet(
                 id SERIAL PRIMARY KEY,
                 client_id uuid,
                 wallet_id uuid DEFAULT uuid_generate_v4 () UNIQUE,
@@ -92,7 +92,7 @@ class InitTables:
             if func.startswith("_create_table_"):
                 create_table_commands.append(self.__getattribute__(func))
 
-        await self.curs.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
+        await self.curs.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')  # support for uuid
 
         for create_table in create_table_commands:
             creat_table_query = create_table()
