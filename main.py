@@ -5,9 +5,10 @@ import time
 import datetime
 
 from create_db_ops import InitTables
-
-from populate_db_ops import create_client_and_related_data, create_client_types
-
+from populate_db_ops import (
+    create_client_and_related_data,
+    create_client_types,
+)
 
 
 import aiopg
