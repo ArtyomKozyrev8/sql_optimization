@@ -3,14 +3,28 @@ from aiopg import Cursor
 from typing import Optional
 
 
+async def create_client_type(
+    curs: Cursor,
+    client_type: int,
+) -> None:
+    query = "INSERT INTO client_type(client_type) VALUES (%(client_type)s) ON CONFLICT DO NOTHING;"
+
+    await curs.execute(query, {"client_type": client_type})
+
+
 async def create_client(
     curs: Cursor,
     fio: str,
     birthdate: str,
+    client_type: int,
 ) -> str:
-    query = "INSERT INTO client(fio, birthdate) VALUES (%(fio)s, %(birthdate)s) RETURNING client_id;"
+    query = (
+        "INSERT INTO client(fio, birthdate, client_type)"
+        " VALUES (%(fio)s, %(birthdate)s, %(client_type)s)"
+        " RETURNING client_id;"
+    )
 
-    await curs.execute(query, {"fio": fio, "birthdate": birthdate})
+    await curs.execute(query, {"fio": fio, "birthdate": birthdate, "client_type": client_type})
 
     client_id = (await curs.fetchall())[0][0]
 
