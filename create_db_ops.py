@@ -5,22 +5,38 @@ class InitTables:
     def __init__(self, curs: Cursor) -> None:
         self.curs = curs
 
-    @staticmethod
-    def _create_table_client() -> str:
-        return """
+    async def _create_table_client_type(self) -> None:
+        q = """
+            CREATE TABLE IF NOT EXISTS client_type(
+                id SERIAL PRIMARY KEY,
+                client_type INTEGER,
+                UNIQUE(client_type)
+            );
+        """
+        await self.curs.execute(q)
+        
+
+    async def _create_table_client(self) -> None:
+        q = """
             CREATE TABLE IF NOT EXISTS client(
                 id SERIAL PRIMARY KEY,
                 client_id uuid DEFAULT uuid_generate_v4 () UNIQUE,
                 fio VARCHAR(120),
                 birthdate VARCHAR(10),
+                client_type INTEGER,
                 deleted BOOLEAN DEFAULT FALSE,
-                created_time TIMESTAMP DEFAULT NOW()
+                created_time TIMESTAMP DEFAULT NOW(),
+                CONSTRAINT fk_client_type_client_type_tb
+                    FOREIGN KEY(client_type) 
+                    REFERENCES client_type(client_type)
+                    ON DELETE SET NULL ON UPDATE CASCADE
             );
         """
+        await self.curs.execute(q)
 
-    @staticmethod
-    def _create_table_contact() -> str:
-        return """
+
+    async def _create_table_client_contact(self) -> None:
+        q = """
             CREATE TABLE IF NOT EXISTS client_contact(
                 id SERIAL PRIMARY KEY,
                 client_id uuid UNIQUE,
@@ -34,10 +50,11 @@ class InitTables:
                 ON DELETE SET NULL ON UPDATE CASCADE
             );
         """
+        await self.curs.execute(q)
 
-    @staticmethod
-    def _create_table_address() -> str:
-        return """
+
+    async def _create_table_client_address(self) -> None:
+        q = """
             CREATE TABLE IF NOT EXISTS client_address(
                 id SERIAL PRIMARY KEY,
                 client_id uuid UNIQUE,
@@ -50,10 +67,11 @@ class InitTables:
                 ON DELETE SET NULL ON UPDATE CASCADE
             );
         """
+        await self.curs.execute(q)
 
-    @staticmethod
-    def _create_table_passport() -> str:
-        return """
+
+    async def _create_table_client_passport(self) -> None:
+        q = """
             CREATE TABLE IF NOT EXISTS client_passport(
                 id SERIAL PRIMARY KEY,
                 client_id uuid UNIQUE,
@@ -67,10 +85,11 @@ class InitTables:
                 ON DELETE SET NULL ON UPDATE CASCADE
             );
         """
+        await self.curs.execute(q)
 
-    @staticmethod
-    def _create_table_wallet() -> str:
-        return """
+    
+    async def _create_table_client_wallet(self) -> None:
+        q = """
             CREATE TABLE IF NOT EXISTS client_wallet(
                 id SERIAL PRIMARY KEY,
                 client_id uuid,
@@ -84,17 +103,20 @@ class InitTables:
                 ON DELETE SET NULL ON UPDATE CASCADE
             );
         """
+        await self.curs.execute(q)
 
     async def create_db_tables(self) -> None:
-        create_table_commands = []
-
-        for func in self.__class__.__dict__:
-            if func.startswith("_create_table_"):
-                create_table_commands.append(self.__getattribute__(func))
+        create_table_commands = [
+            self._create_table_client_type,
+            self._create_table_client,
+            self._create_table_client_address,
+            self._create_table_client_contact,
+            self._create_table_client_passport,
+            self._create_table_client_wallet,
+        ]
 
         await self.curs.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')  # support for uuid
 
+        # order of table matters, that's why "gather" is not used
         for create_table in create_table_commands:
-            creat_table_query = create_table()
-            # order of table matters, that's why "gather" is not used
-            await self.curs.execute(creat_table_query)
+            await create_table()
