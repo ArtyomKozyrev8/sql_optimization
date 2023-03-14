@@ -10,6 +10,8 @@ class InitTables:
             CREATE TABLE IF NOT EXISTS client_type(
                 id SERIAL PRIMARY KEY,
                 client_type INTEGER,
+                deleted BOOLEAN DEFAULT FALSE,
+                created_time TIMESTAMP DEFAULT NOW(),
                 UNIQUE(client_type)
             );
         """
