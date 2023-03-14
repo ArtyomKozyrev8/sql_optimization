@@ -5,13 +5,9 @@ import time
 import datetime
 
 from create_db_ops import InitTables
-from insert_ops import (
-    create_client,
-    create_client_address,
-    create_client_contact,
-    create_client_passport,
-    create_client_wallet,
-)
+
+from populate_db_ops import create_client_and_related_data, create_client_types
+
 
 
 import aiopg
@@ -44,15 +40,14 @@ async def amain():
         async with pg_pool.acquire() as conn:
             async with conn.cursor() as curs:
                 await InitTables(curs).create_db_tables()
-
-                print("A")
-                x = await create_client(curs, "11", "22")
-                print(x)
-                await create_client_contact(curs, phone="+7", email="email", client_id=x)
-                await create_client_passport(curs, seria="7777", number="123444", client_id=x)
-                await create_client_address(curs, address="1-1-1-1-1", client_id=x)
-                z = await create_client_wallet(curs, client_id=x, balance=random.randint(1, 100))
-                print(z)
+                await create_client_types(curs=curs)
+                await create_client_and_related_data(curs=curs, client_type=1)
+                await create_client_and_related_data(curs=curs, client_type=1)
+                await create_client_and_related_data(curs=curs, client_type=4)
+                await create_client_and_related_data(curs=curs, wallets_number=3, client_type=2)
+                await create_client_and_related_data(curs=curs, wallets_number=2, client_type=3)
+                await create_client_and_related_data(curs=curs, wallets_number=0, client_type=1)
+                await create_client_and_related_data(curs=curs, wallets_number=0, client_type=1)
     finally:
         pg_pool.close()
         await pg_pool.wait_closed()
